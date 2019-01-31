@@ -1,0 +1,101 @@
+        public XmlDocument doc4v3(string guid, string service, string Ticket, string account, string cAmount, string cFee, string cnCurrency, KeyValue kvParms, string fileSave = "")
+        {
+
+            //Создаем XML-Документ с содержимым услуги
+            XmlDocument xDoc = new XmlDocument();
+            XmlDeclaration xmldecl = xDoc.CreateXmlDeclaration("1.0", "utf-8", null);
+            xDoc.AppendChild(xmldecl);
+
+            XmlNode Node = xDoc.CreateElement("Request");
+            XmlNode Parm;
+            xDoc.AppendChild(Node);
+            XmlAttribute attribute;
+
+            attribute = xDoc.CreateAttribute("xmlns:xsi");
+            attribute.Value = "http://www.w3.org/2001/XMLSchema-instance";
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("xmlns:xsd");
+            attribute.Value = "http://www.w3.org/2001/XMLSchema";
+            Node.Attributes.Append(attribute);
+
+            gPrint.writeLog("NamespaceURI=" + attribute.NamespaceURI);
+
+            attribute = xDoc.CreateAttribute("type", "http://www.w3.org/2001/XMLSchema-instance"); //"xsd_xsi"
+            attribute.Value = "SendPaymentRequest";
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("Id");
+            attribute.Value = guid;
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("Service");
+            attribute.Value = service;
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("Ticket");
+            attribute.Value = Ticket; //Квитанция. счетчик на терминале
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("PaymentTool");
+            attribute.Value = "1"; //Пока не знаю, кто это?
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("Commision");
+            attribute.Value = cFee.Replace(",", ".");
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("Value");
+            attribute.Value = cAmount.Replace(",", ".");
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("account");
+            attribute.Value = account.Replace(",", ".");
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("Currency");
+            attribute.Value = cnCurrency;
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("EncashmentNumber");
+            attribute.Value = "1"; //Инкассация - всегда 1 !!!
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("Time");
+            attribute.Value = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz");
+            gPrint.writeLog("time=" + attribute.Value);
+            //      "2017-12-07T01:15:56.4608724+03:00"; //текущее время сервера, только бы попасть в формат
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("Number");
+            attribute.Value = "000" + this.idPoint.ToString() + DateTime.Now.ToString("yyyyMMddHHmmss");
+            //attribute.Value = "12345678901234567890";
+            //Рекомендуется составлять его на основе номера точки и времени платежа. 
+            //Например, время платежа 2010-04-10T14:45:34+05:00, 
+            //номер точки 12345: получаем номер платежа 12345 2010 04 10 14 45 34 
+            Node.Attributes.Append(attribute);
+
+            attribute = xDoc.CreateAttribute("xmlns");
+            attribute.Value = "http://ekassir.com/eKassir/PaySystem/Server/eKassirV3Protocol";
+            Node.Attributes.Append(attribute);
+
+            //--------------- Параметры платежа ---------------//
+            Node = Node.AppendChild(xDoc.CreateElement("PaymentParameters"));
+            attribute = xDoc.CreateAttribute("xmlns");
+            Node.Attributes.Append(attribute);
+
+            foreach (KEY_VALUE kv in kvParms.Key_Value)
+            {
+                //int i = 0; i < kvParms.Length; i++, i++)
+                Parm = Node.AppendChild(xDoc.CreateElement("Parameter"));
+                attribute = xDoc.CreateAttribute("Name");
+                attribute.Value = kv.KEY;
+                Parm.Attributes.Append(attribute);
+                attribute = xDoc.CreateAttribute("Value");
+                attribute.Value = kv.VALUE;
+                Parm.Attributes.Append(attribute);
+            }
+
+            if (fileSave!="") xDoc.Save(fileSave);
+            return xDoc;
+        }
